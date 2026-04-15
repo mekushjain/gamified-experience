@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crack the Case | Convosight Visual Intelligence</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+  :root {
+    --bg: #f6f5f1;
+    --surface: #ffffff;
+    --surface-2: #f0eeea;
+    --surface-3: #e8e6e0;
+    --accent: #1a7a5c;
+    --accent-light: #1a7a5c12;
+    --accent-mid: #1a7a5c22;
+    --accent-bright: #22c88e;
+    --red: #d94452;
+    --red-light: #d9445210;
+    --amber: #e8a817;
+    --amber-light: #e8a81715;
+    --text: #1a1a1f;
+    --text-2: #4a4a55;
+    --text-3: #8a8a98;
+    --border: #e2e0da;
+    --radius: 14px;
+    --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.03);
+    --shadow-md: 0 4px 16px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04);
+    --shadow-lg: 0 12px 40px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+  }
+
+  * { margin:0;padding:0;box-sizing:border-box; }
+  body { font-family:'Outfit',sans-serif;background:var(--surface);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased; }
+  .container { max-width:520px;margin:0 auto;padding:20px 24px; }
+
+  .global-logo { text-align:center;padding:28px 0 0; }
+  .logo { height:40px; }
+  .header { text-align:center;padding:24px 0 28px; }
+  .header h1 { font-size:34px;font-weight:800;line-height:1.15;letter-spacing:-0.5px;margin-bottom:10px; }
+  .header h1 .green { color:var(--accent); }
+  .header p { color:var(--text-2);font-size:15px;line-height:1.55;font-weight:400;max-width:340px;margin:0 auto; }
+
+  .track-select { display:flex;gap:12px;margin:28px 0 0; }
+  .track-btn {
+    flex:1;padding:22px 16px;border:1.5px solid var(--border);border-radius:var(--radius);
+    background:var(--surface-2);color:var(--text);cursor:pointer;text-align:center;
+    transition:all 0.25s cubic-bezier(.4,0,.2,1);font-family:'Outfit',sans-serif;
+    position:relative;overflow:hidden;
+  }
+  .track-btn::before { content:'';position:absolute;inset:0;background:var(--accent-light);opacity:0;transition:opacity 0.25s; }
+  .track-btn:hover::before { opacity:1; }
+  .track-btn:hover { border-color:var(--accent);transform:translateY(-2px); }
+  .track-btn.active { border-color:var(--accent);background:var(--accent-light); }
+  .track-btn .emoji { font-size:30px;display:block;margin-bottom:8px;position:relative; }
+  .track-btn .label { font-weight:700;font-size:16px;position:relative; }
+  .track-btn .sub { font-size:12px;color:var(--text-3);margin-top:4px;font-weight:400;position:relative; }
+  .track-btn-solo { max-width:100%; }
+
+  .rules-box {
+    background:transparent;border:none;border-radius:0;
+    padding:20px 0;margin-top:20px;text-align:center;
+  }
+  .rules-box h4 { font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;justify-content:center;gap:8px; }
+  .prize-row {
+    display:flex;align-items:center;justify-content:center;gap:10px;padding:10px 0;
+    border-bottom:1px solid var(--surface-3);font-size:13px;
+  }
+  .prize-row:last-child { border-bottom:none; }
+  .prize-level {
+    font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;
+    width:20px;height:20px;border-radius:6px;display:flex;align-items:center;justify-content:center;
+    background:var(--surface-2);color:var(--text-3);flex-shrink:0;
+  }
+  .prize-level.l5 { background:#ffd70025;color:#b8860b; }
+  .prize-emoji { font-size:18px;flex-shrink:0; }
+  .prize-name { font-weight:500;color:var(--text); }
+  .prize-desc { font-size:11.5px;color:var(--text-3);font-weight:400; }
+
+  .top-bar { display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding:0 2px; }
+  .progress-bar { display:flex;gap:6px;flex:1;margin-right:16px; }
+  .progress-pip { flex:1;height:5px;border-radius:99px;background:var(--surface-3);transition:background 0.4s,box-shadow 0.4s; }
+  .progress-pip.done { background:var(--accent-bright);box-shadow:0 0 8px #22c88e40; }
+  .progress-pip.wrong { background:var(--red); }
+  .progress-pip.active { background:var(--amber);animation:pulse 1.8s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.45} }
+
+  .streak-pill {
+    font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:500;
+    color:var(--accent);background:var(--accent-light);
+    padding:5px 12px;border-radius:99px;white-space:nowrap;
+  }
+
+  .q-card {
+    background:transparent;border:none;
+    border-radius:0;padding:0;
+    animation:fadeUp 0.45s cubic-bezier(.4,0,.2,1);
+  }
+  @keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+  .q-meta { display:flex;align-items:center;justify-content:space-between;margin-bottom:16px; }
+  .q-num { font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;color:var(--text-3);letter-spacing:1px; }
+  .diff-pills { display:flex;gap:4px; }
+  .diff-pills span { width:8px;height:8px;border-radius:99px;background:var(--surface-3);transition:background 0.3s; }
+  .diff-pills span.on { background:var(--amber); }
+
+  .video-link-box {
+    display:flex;align-items:center;gap:14px;background:var(--surface-2);border-radius:12px;
+    padding:14px 16px;margin-bottom:18px;text-decoration:none;transition:all 0.2s;border:1px solid var(--surface-3);
+  }
+  .video-link-box:hover { border-color:var(--accent);background:var(--accent-light); }
+  .play-circle {
+    width:42px;height:42px;border-radius:50%;background:var(--accent);
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 2px 8px #1a7a5c30;
+  }
+  .play-circle svg { fill:white;width:16px;height:16px;margin-left:2px; }
+  .video-link-text .vlt-title { font-weight:600;font-size:14px;color:var(--text); }
+  .video-link-text .vlt-sub { font-size:11.5px;color:var(--text-3);margin-top:2px; }
+
+  .q-card h3 { font-size:17px;font-weight:600;line-height:1.5;margin-bottom:18px;color:var(--text); }
+
+  .options { display:flex;flex-direction:column;gap:10px; }
+  .opt-btn {
+    width:100%;padding:14px 16px;border:1.5px solid var(--surface-3);border-radius:12px;
+    background:var(--surface);color:var(--text);font-family:'Outfit',sans-serif;
+    font-size:14.5px;font-weight:500;text-align:left;cursor:pointer;
+    transition:all 0.2s cubic-bezier(.4,0,.2,1);display:flex;align-items:center;gap:12px;line-height:1.45;
+  }
+  .opt-btn:hover:not(.answered) { border-color:var(--accent);background:var(--accent-light);transform:translateY(-1px);box-shadow:var(--shadow-sm); }
+  .opt-letter {
+    font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+    width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;
+    background:var(--surface-2);color:var(--text-2);flex-shrink:0;transition:all 0.2s;
+  }
+  .opt-btn.correct-answer { border-color:var(--accent-bright);background:#22c88e0c; }
+  .opt-btn.correct-answer .opt-letter { background:var(--accent-bright);color:white; }
+  .opt-btn.wrong-answer { border-color:var(--red);background:var(--red-light); }
+  .opt-btn.wrong-answer .opt-letter { background:var(--red);color:white; }
+  .opt-btn.dimmed { opacity:0.35;pointer-events:none; }
+
+  .explanation {
+    margin-top:18px;padding:20px;border-radius:14px;font-size:13.5px;line-height:1.65;
+    color:var(--text-2);animation:fadeUp 0.35s cubic-bezier(.4,0,.2,1);
+    border:1px solid var(--surface-3);
+  }
+  .explanation.right { background:linear-gradient(135deg,#22c88e06 0%,#22c88e10 100%);border-color:#22c88e30; }
+  .explanation.wrong { background:linear-gradient(135deg,#d9445206 0%,#d9445210 100%);border-color:#d9445230; }
+  .explanation .result-label {
+    font-weight:800;font-size:18px;color:var(--text);margin-bottom:4px;letter-spacing:-0.3px;
+  }
+  .explanation .result-sub { font-size:12px;color:var(--text-3);margin-bottom:14px;font-weight:500; }
+  .explanation .exp-text { font-size:13.5px;line-height:1.7;color:var(--text-2); }
+
+  .cvi-tag {
+    display:flex;align-items:flex-start;gap:10px;font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;font-weight:500;letter-spacing:0.3px;color:var(--accent);
+    background:var(--accent-light);padding:12px 14px;border-radius:10px;margin-top:16px;
+    line-height:1.55;border:1px solid var(--accent-mid);
+  }
+  .cvi-tag::before { content:'⚡';font-size:14px;flex-shrink:0;margin-top:-1px; }
+
+  .next-btn {
+    width:100%;padding:15px;border:none;border-radius:12px;background:var(--text);color:white;
+    font-family:'Outfit',sans-serif;font-size:15px;font-weight:600;cursor:pointer;
+    margin-top:18px;transition:all 0.2s;letter-spacing:0.2px;
+  }
+  .next-btn:hover { background:#2a2a32;transform:translateY(-1px);box-shadow:var(--shadow-md); }
+
+  /* RESULTS */
+  .results-card {
+    background:transparent;border:none;border-radius:0;
+    padding:36px 0;animation:fadeUp 0.5s cubic-bezier(.4,0,.2,1);
+  }
+  .results-card .res-eyebrow {
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:2.5px;
+    text-transform:uppercase;color:var(--text-3);text-align:center;
+  }
+  .results-card .big-emoji { font-size:56px;text-align:center;margin:16px 0 4px; }
+  .results-card .rank { font-size:22px;font-weight:700;text-align:center;margin:8px 0; }
+  .results-card .rank-desc { color:var(--text-2);font-size:14.5px;line-height:1.6;text-align:center;margin-bottom:6px;font-weight:400; }
+
+  .prize-won-box {
+    background:transparent;
+    border:none;border-radius:0;padding:20px 0;margin:20px 0;text-align:center;
+    border-top:1px solid var(--surface-3);border-bottom:1px solid var(--surface-3);
+  }
+  .prize-won-box .pw-label {
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;
+    text-transform:uppercase;color:#b8860b;margin-bottom:8px;
+  }
+  .prize-won-box .pw-prize { font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px; }
+  .prize-won-box .pw-desc { font-size:13px;color:var(--text-2);line-height:1.5; }
+
+  .cta-box {
+    background:transparent;border:none;border-radius:0;
+    padding:20px 0;margin-top:20px;text-align:center;
+  }
+  .cta-box h4 { color:var(--accent);font-size:16px;font-weight:700;margin-bottom:6px; }
+  .cta-box p { font-size:13.5px;color:var(--text-2);line-height:1.55; }
+
+  .restart-btn {
+    display:block;width:100%;margin-top:20px;padding:13px 24px;border:none;
+    border-radius:12px;background:var(--text);color:white;font-family:'Outfit',sans-serif;
+    font-size:14px;font-weight:600;cursor:pointer;transition:all 0.2s;text-align:center;
+  }
+  .restart-btn:hover { background:#2a2a32; }
+
+  .auto-next {
+    text-align:center;margin-top:18px;font-family:'JetBrains Mono',monospace;
+    font-size:12px;color:var(--text-3);letter-spacing:0.5px;animation:fadeUp 0.3s ease;
+  }
+  .auto-next span { font-weight:700;color:var(--text-2); }
+
+  .watch-screen { text-align:center;padding:24px 0;animation:fadeUp 0.45s cubic-bezier(.4,0,.2,1); }
+  .watch-screen .watch-step {
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:2.5px;
+    text-transform:uppercase;color:var(--text-3);margin-bottom:12px;
+  }
+  .watch-screen h2 { font-size:22px;font-weight:700;line-height:1.3;margin-bottom:6px; }
+  .watch-screen .watch-sub { color:var(--text-2);font-size:14px;margin-bottom:20px;line-height:1.5; }
+  .video-player-wrap {
+    position:relative;width:100%;border-radius:14px;overflow:hidden;
+    background:#000;margin-bottom:16px;cursor:pointer;
+  }
+  .video-player-wrap video {
+    display:block;width:100%;max-height:70vh;object-fit:contain;background:#000;
+  }
+  .video-controls {
+    position:absolute;bottom:0;left:0;right:0;
+    display:flex;align-items:center;gap:10px;padding:10px 12px;
+    background:linear-gradient(transparent,rgba(0,0,0,0.7));
+    opacity:1;transition:opacity 0.3s;
+  }
+  .video-player-wrap.hide-controls .video-controls { opacity:0; }
+  .video-player-wrap:hover .video-controls,
+  .video-player-wrap.paused .video-controls { opacity:1; }
+  .vid-play-btn {
+    width:30px;height:30px;border-radius:50%;border:none;background:rgba(255,255,255,0.2);
+    display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;
+    transition:background 0.2s;backdrop-filter:blur(4px);
+  }
+  .vid-play-btn:hover { background:rgba(255,255,255,0.35); }
+  .vid-play-btn svg { fill:white;width:12px;height:12px; }
+  .vid-progress-wrap {
+    flex:1;height:4px;background:rgba(255,255,255,0.25);border-radius:99px;overflow:hidden;cursor:pointer;
+  }
+  .vid-progress-bar {
+    height:100%;width:0%;background:white;border-radius:99px;transition:width 0.15s linear;
+  }
+  .vid-time {
+    font-family:'JetBrains Mono',monospace;font-size:10px;color:rgba(255,255,255,0.8);
+    white-space:nowrap;flex-shrink:0;
+  }
+  .vid-pause-icon {
+    position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+    pointer-events:none;opacity:0;transition:opacity 0.25s;
+  }
+  .vid-pause-icon.show { opacity:1; }
+  .vid-pause-icon div {
+    width:56px;height:56px;border-radius:50%;background:rgba(0,0,0,0.55);
+    display:flex;align-items:center;justify-content:center;backdrop-filter:blur(6px);
+  }
+  .vid-pause-icon svg { fill:white;width:22px;height:22px; }
+  .video-ended-overlay {
+    position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+    background:rgba(0,0,0,0.7);color:white;animation:fadeUp 0.3s ease;
+  }
+  .video-ended-overlay .veo-text {
+    font-family:'JetBrains Mono',monospace;font-size:13px;letter-spacing:0.5px;opacity:0.9;
+  }
+  .video-ended-overlay .veo-count {
+    font-size:32px;font-weight:700;margin-top:4px;
+  }
+
+  /* DEPTH SHOWCASE */
+  .depth-showcase {
+    margin:24px 0;border-radius:16px;overflow:hidden;
+    border:1px solid var(--border);background:var(--surface);
+  }
+  .depth-header {
+    padding:16px 20px 12px;background:var(--surface-2);
+    border-bottom:1px solid var(--border);
+  }
+  .depth-header .depth-eyebrow {
+    font-family:'JetBrains Mono',monospace;font-size:10px;letter-spacing:2px;
+    text-transform:uppercase;color:var(--accent);margin-bottom:4px;font-weight:600;
+  }
+  .depth-header h4 {
+    font-size:15px;font-weight:700;color:var(--text);line-height:1.4;
+  }
+  .depth-header p {
+    font-size:12px;color:var(--text-3);margin-top:2px;line-height:1.45;
+  }
+  .depth-tabs {
+    display:flex;border-bottom:1px solid var(--border);background:var(--surface-2);
+  }
+  .depth-tab {
+    flex:1;padding:10px 16px;border:none;background:transparent;
+    font-family:'JetBrains Mono',monospace;font-size:11px;font-weight:600;
+    letter-spacing:0.5px;color:var(--text-3);cursor:pointer;
+    transition:all 0.2s;text-align:center;position:relative;
+  }
+  .depth-tab::after {
+    content:'';position:absolute;bottom:0;left:16px;right:16px;height:2px;
+    background:var(--accent);border-radius:2px 2px 0 0;opacity:0;transition:opacity 0.2s;
+  }
+  .depth-tab:hover { color:var(--text-2); }
+  .depth-tab.active { color:var(--accent); }
+  .depth-tab.active::after { opacity:1; }
+  .depth-tab .tab-icon { margin-right:6px;font-style:normal; }
+  .depth-content {
+    max-height:220px;overflow-y:auto;padding:16px 20px;
+    scrollbar-width:thin;scrollbar-color:var(--surface-3) transparent;
+  }
+  .depth-content::-webkit-scrollbar { width:5px; }
+  .depth-content::-webkit-scrollbar-track { background:transparent; }
+  .depth-content::-webkit-scrollbar-thumb { background:var(--surface-3);border-radius:99px; }
+  .depth-content::-webkit-scrollbar-thumb:hover { background:var(--border); }
+  .depth-pane { display:none;animation:fadeUp 0.3s ease; }
+  .depth-pane.active { display:block; }
+  .depth-pane p {
+    font-size:13px;line-height:1.75;color:var(--text-2);
+  }
+  .depth-pane .signal-count {
+    display:inline-flex;align-items:center;gap:5px;
+    font-family:'JetBrains Mono',monospace;font-size:10.5px;font-weight:600;
+    color:var(--accent);background:var(--accent-light);
+    padding:4px 10px;border-radius:99px;margin-bottom:12px;
+    border:1px solid var(--accent-mid);
+  }
+
+  .hidden { display:none !important; }
+
+  /* Small phones (375px and below) */
+  @media (max-width:400px) {
+    .container { padding:16px; }
+    .global-logo { padding:20px 0 0; }
+    .logo { height:32px; }
+    .header { padding:16px 0 20px; }
+    .header h1 { font-size:28px; }
+    .header p { font-size:14px; }
+    .track-btn { padding:18px 14px; }
+    .track-btn .emoji { font-size:26px; }
+    .track-btn .label { font-size:15px; }
+    .q-card h3 { font-size:15.5px; }
+    .opt-btn { padding:12px 14px;font-size:13.5px; }
+    .opt-letter { width:26px;height:26px;font-size:10px; }
+    .explanation .result-label { font-size:16px; }
+    .explanation { padding:16px; }
+    .cvi-tag { font-size:9.5px;padding:10px 12px; }
+    .results-card .big-emoji { font-size:48px; }
+    .results-card .rank { font-size:20px; }
+    .results-card .rank-desc { font-size:13.5px; }
+    .prize-won-box .pw-prize { font-size:16px; }
+  }
+
+  /* Tablets / iPads (768px+) */
+  @media (min-width:600px) {
+    .container { max-width:580px;padding:32px 40px; }
+    .global-logo { padding:36px 0 0; }
+    .logo { height:48px; }
+    .header { padding:28px 0 32px; }
+    .header h1 { font-size:40px; }
+    .header p { font-size:16px;max-width:400px; }
+    .track-btn { padding:26px 20px; }
+    .track-btn .emoji { font-size:34px; }
+    .track-btn .label { font-size:18px; }
+    .track-btn .sub { font-size:13px; }
+    .rules-box h4 { font-size:15px; }
+    .prize-row { font-size:14px;padding:12px 0; }
+    .prize-emoji { font-size:20px; }
+    .progress-pip { height:6px; }
+    .streak-pill { font-size:13px;padding:6px 14px; }
+    .q-card h3 { font-size:19px; }
+    .video-link-box { padding:16px 18px; }
+    .video-link-text .vlt-title { font-size:15px; }
+    .opt-btn { padding:16px 18px;font-size:15.5px;border-radius:14px; }
+    .opt-letter { width:34px;height:34px;font-size:12px;border-radius:10px; }
+    .explanation { padding:24px; }
+    .explanation .result-label { font-size:20px; }
+    .explanation .exp-text { font-size:14.5px; }
+    .cvi-tag { font-size:11px;padding:14px 16px; }
+    .next-btn { padding:17px;font-size:16px;border-radius:14px; }
+    .results-card { padding:48px 0; }
+    .results-card .big-emoji { font-size:64px; }
+    .results-card .rank { font-size:26px; }
+    .results-card .rank-desc { font-size:16px; }
+    .prize-won-box { padding:24px 0; }
+    .prize-won-box .pw-prize { font-size:20px; }
+    .prize-won-box .pw-desc { font-size:14px; }
+    .cta-box h4 { font-size:18px; }
+    .cta-box p { font-size:14.5px; }
+    .restart-btn { padding:15px 28px;font-size:15px;border-radius:14px; }
+  }
+
+  /* Large tablets / landscape iPad (1024px+) */
+  @media (min-width:1024px) {
+    .container { max-width:640px;padding:40px 48px; }
+    .header h1 { font-size:44px; }
+    .logo { height:52px; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="global-logo"><img src="convotrack_logo.png" alt="ConvoTrack by Convosight" class="logo"></div>
+
+  <div id="landing">
+    <div class="header">
+      <h1>Crack the <span class="green">Case</span></h1>
+      <p>Watch one real influencer video. Answer 3 questions about what you saw. One wrong answer and the game is over — how far can you go?</p>
+    </div>
+    <div class="track-select" style="justify-content:center;">
+      <button class="track-btn" onclick="startGame()" style="flex:none;width:100%;">
+        <span class="emoji">🎯</span>
+        <span class="label">Start the Challenge</span>
+        <br>
+        <span class="sub">1 video · 3 questions · 2 min</span>
+      </button>
+    </div>
+
+    <div class="rules-box">
+      <h4>🎁 Prize Ladder</h4>
+      <div class="prize-row"><div class="prize-level">1</div><span class="prize-emoji">🍬</span><div><span class="prize-name">Convosight Sticker Pack</span><br><span class="prize-desc">Clear Level 1</span></div></div>
+      <div class="prize-row"><div class="prize-level">2</div><span class="prize-emoji">🎧</span><div><span class="prize-name">Branded Wireless Earbuds</span><br><span class="prize-desc">Clear Level 2</span></div></div>
+      <div class="prize-row"><div class="prize-level l5">3</div><span class="prize-emoji">🏆</span><div><span class="prize-name">$200 Gift Card + CVI Brand Report</span><br><span class="prize-desc">Clear all 3 — Perfect Detective</span></div></div>
+    </div>
+  </div>
+
+  <div id="videoScreen" class="hidden">
+    <div id="videoArea"></div>
+  </div>
+
+  <div id="game" class="hidden">
+    <div class="top-bar">
+      <div class="progress-bar" id="progressBar"></div>
+      <div class="streak-pill" id="streakPill">🔥 0 / 3</div>
+    </div>
+    <div id="questionArea"></div>
+  </div>
+
+  <div id="results" class="hidden"></div>
+</div>
+
+<script>
+const PRIZES=[
+  {emoji:"😅",name:"No Prize",desc:"You didn't clear any level — but now you know why CVI exists!"},
+  {emoji:"🍬",name:"Convosight Sticker Pack",desc:"You cleared Level 1! Collect your sticker pack at the booth."},
+  {emoji:"🎧",name:"Branded Wireless Earbuds",desc:"You cleared Level 2! Pick up your earbuds at the booth."},
+  {emoji:"🏆",name:"$200 Gift Card + CVI Brand Report",desc:"PERFECT RUN! You cleared all 3 levels. Claim your grand prize at the booth."}
+];
+
+const VIDEOS=[
+  {
+    id:1,
+    video:"https://www.instagram.com/p/DWrbzVZDy0c/",
+    videoLabel:"Homemade Pizza Masterclass",
+    questions:[
+      {difficulty:1,question:"The pizza maker is wearing a specific outfit throughout the tutorial. What color is his t-shirt?",options:["White","Black","Light blue","Red"],correct:2,explanation:"He wears a light blue t-shirt under a dark grey apron, with a beige baseball cap. CVI's appearance detection tracked the creator's outfit across all frames — useful for brand-creator attribution in multi-post campaigns.",cvi_insight:"CVI: Creator appearance tracked across frames — outfit tagged as light blue tee + dark grey apron + beige cap"},
+      {difficulty:2,question:"He holds up a specific bag of flour to sprinkle on the pizza peel. What brand and type is it?",options:["King Arthur Bread Flour","Bob's Red Mill Semolina","Gold Medal All-Purpose","Caputo 00 Flour"],correct:1,explanation:"He holds up a bag of Bob's Red Mill Semolina Flour and sprinkles it on the wooden pizza peel. CVI's package-label OCR identified 7 distinct branded products in this single video — mapping the complete product ecosystem.",cvi_insight:"CVI: 7 branded products identified via on-screen package label OCR in a single video"},
+      {difficulty:3,question:"At the very end, after slicing the finished pizza, he opens a specific mini drink. What is it?",options:["A mini Sprite can","A mini Coke can","A mini Pellegrino bottle","A mini Ginger Ale can"],correct:1,explanation:"After taking a bite, he opens a mini Coke can and takes a sip — a blink-and-miss product placement in the final 3 seconds. CVI's frame-by-frame object detection caught this brief brand appearance and auto-tagged it as incidental product placement.",cvi_insight:"CVI: Incidental product placement auto-detected in final 3-second window — mini Coke can identified"}
+    ],
+    audio: "I'm a firm believer that anybody can make amazing pizza at home because it's really not that hard. For some reason, pizza making's kind of gate kept, so that's why I'm here. This is my take on a New York style pizza that you can make at home with any normal oven. Let's go make it. First, the dough. I make my own dough. Here's my recipe, and I built a dough calculator to make it super easy if you want to try it out. But you can also just use store-bought dough. The most important thing though is to let it sit out for four to five hours before baking so it gets to room temp. If you've ever had issues stretching pizza dough, it was most likely too cold. Flour up your dough on both sides and form a crust with your fingers. Press out the air in the dough with your fingers just like this. Do this on both sides until your dough is bigger than your hand. Then pick up your dough and shake the flour off. For stretching, put the dough on your knuckles and let gravity do the work. Just try to look for thin spots and avoid those areas. Once you get your dough stretched out, plop it onto a wooden pizza peel. A wooden peel is going to make your life so much easier. That combined with semolina flour will make the dough slide off with no problems. I'm making a sauce on top cheese here, so add some olive oil and pecorino before adding your low moisture mozzarella. Low moisture mozzarella is going to be the best for baking in a normal oven, but I like to use a couple pieces of fresh mozzarella too for taste. But don't add too much or it can make your pizza soggy. Then ladle your sauce on top. You can add as much as you want. I keep my sauce simple with just crushed tomatoes and some spices. Here's my sauce recipe. All right, now that we have our pizza built, it's time to launch. Okay, so here's the secret. I have a pizza steel in my oven that's been preheating for 45 minutes at 550 degrees. This holds heat way better than a pizza stone and it's going to mimic a pizza oven so you get a perfectly baked undercarriage. Launch your pizza by giving the peel a bit of a shake with a low angle. You don't want to angle your peel too much or your toppings would come off. So just shake it at a low angle until it slides your peel out. I usually bake anywhere from six to eight minutes depending on how well you want it done. Pizza ovens are fun and all, but just look how good this pizza looks just from a normal oven. It's way easier, it's much more convenient, plus most everybody has a normal oven in their kitchen. Not to mention this pizza costs less than five bucks to make. After baking, I put my pizza on a wire rack for a minute or two. Then I add some extra virgin olive oil on the crust and of course, lots and lots of parm. It might not be your thing, but it's definitely mine. So, if you've been wanting to make great pizza at home, consider this your sign. I'll put all my ingredients I use and all my recipes in the caption and all the pizza equipment I use is linked in my bio. With the right ingredients and some practice, making pizza like this at home is really easy. The thing to remember is no matter how it looks, it's almost always going to taste good. So save this video, give it a try, and let me know what kind of pizza you're making this weekend. Ah.",
+    video: "The video opens with a man in a light blue t-shirt, a dark grey apron, and a beige baseball cap, standing in a modern kitchen. He holds a pizza peel, then places a cooked pizza on a wire rack. He then uses a pizza cutter, and makes an OK gesture with his fingers. He slices the pizza and lifts a slice, showing the cheesy, saucy underside. He holds up a slice, then takes a bite. He points at the pizza. He then shows a bowl of dough, which he flips onto a floured surface. He opens a refrigerator, takes out the dough, and places it on the counter. He sprinkles flour on the dough and presses it, forming a crust with his fingers. He presses the center of the dough to remove air. He repeats the action on both sides until the dough is larger than his hand. He picks up the dough and shakes off excess flour. He stretches the dough over his knuckles, letting gravity assist. He places the stretched dough on a wooden pizza peel. He holds a bag of Bob's Red Mill Semolina Flour and sprinkles semolina on the peel. He places the dough on the peel. He drizzles olive oil on the dough, then holds a container of Pecorino Romano Cheese before sprinkling it. He adds shredded low-moisture mozzarella, then holds a Trader Joes Fresh Mozzarella Cheese Log and tears pieces of fresh mozzarella onto the pizza. He adds sauce from a Bianco DiNapoli Crushed Tomatoes can, spreading it over the cheese. A small screen-in-screen shows a pizza slice. He holds the prepared pizza. He shows an oven set to 550 degrees, revealing a pizza steel inside. He slides the pizza into the oven with a low-angle shake of the peel. He closes the oven. He opens the oven to reveal a cooked pizza, which he removes with a metal peel. He places the pizza on a wire rack. He drizzles olive oil on the crust and grates parmesan cheese over the pizza. He removes the wire rack and slices the pizza. He lifts a slice, showing the underside of the crust, and takes a bite. He opens a mini Coke can, drinks, and takes another bite of the pizza, showing the bitten crust."
+  },
+  {
+    id:2,
+    video:"https://www.tiktok.com/@themakeshiftproject/video/7600461744426831135",
+    videoLabel:"Crumbl Cookie Calorie Showdown",
+    questions:[
+      {difficulty:1,question:"The video is filmed in a specific visual format with two men. What layout is used throughout?",options:["Picture-in-picture","Single camera, one person","Split-screen, one man on each side","Green screen overlay"],correct:2,explanation:"The entire video uses a split-screen format with one man on each side, debating calorie counts. CVI's layout detection identified this as a split-screen comparison format — a pattern that correlates with 2.1x higher watch time vs. single-presenter formats.",cvi_insight:"CVI: Split-screen layout auto-classified — correlates with 2.1x higher watch time vs. single-presenter"},
+      {difficulty:2,question:"Several items are visible in the studio background behind the hosts. Which collectibles can you spot on the shelves?",options:["Vinyl records and posters","Funko Pops and sports memorabilia","Houseplants and candles","Books and trophies"],correct:1,explanation:"The background features Funko Pops, sports memorabilia, and signs. CVI's scene analysis detected these background objects and classified the setting as 'entertainment/lifestyle studio' — useful for matching brand partnerships to creator environments.",cvi_insight:"CVI: Background object detection classified setting as entertainment/lifestyle studio"},
+      {difficulty:3,question:"How many calories does the video reveal the candy cane brownie Crumbl cookie contains?",options:["800 calories","1,000 calories","1,200 calories","1,500 calories"],correct:2,explanation:"The on-screen text reveals the candy cane brownie Crumbl cookie has 1,200 calories — more than a Big Mac (563) and a 12-pack of Miller Lite (1,152). CVI's text-in-video extraction read every on-screen calorie figure and built a structured comparison table automatically.",cvi_insight:"CVI: On-screen text extraction built structured calorie comparison — 4 products × exact figures auto-tabulated"}
+    ],
+    audio: "What has more calories? A crumble cookie or these things? So the crumble cookie is the candy cane brownie crumble cookie. That sounds like a lot of calories. Or the McDonald's Big Mac. I'm going to say it's a crumble cookie. When you start adding sugar, and you start adding all these other ingredients that go into cookies. Even with a McDonald's Big Mac, the bread, the two patties. Doesn't matter. It's the butter, sugar, it all adds up. You are correct. McDonald's Big Mac has 563 calories. Crumble cookie is way higher. What about the crumble cookie or a 12 pack of Miller Lite? This is an insane comparison. I saw this on Instagram and somebody said, you could either have a crumble cookie or a 12 pack. So 12 pack would be like 12 times 90, I think. Around there, yeah. Quick math in my head, that's like. That's not very quick math. It's pretty slow math. I'm going to go with the crumble cookie. Okay, you're correct. A 12 pack Miller Lite has 1,152 calories. Crumble cookie is higher. What about a candy cane brownie crumble cookie or a family size bag of nacho cheese Doritos? Can't be the Doritos. I feel like Doritos low key, low calorie count. Zach, I'm going to prove you wrong here. They have a lot of calories. Okay, but it's not the same as a crumble cookie. The candy cane whatever. You're right. It's almost double. Family size bag of nacho cheese Doritos, 2,300 calories. How big is a crumble? Isn't it like that big? Candy cane brownie crumble cookie, how many calories do you think it has? So it has to be around 1,150 calories. It's 1,200 calories.",
+    video: "The video features two men discussing the calorie count of different foods. The men are in a studio setting with various decorations in the background, including sports memorabilia, Funko Pops, and signs. The video is split-screen, with one man on each side. On-screen text overlays display the question, \"What Has More Calories A CRUMBL COOKIE OR...\" followed by images of various foods. The men discuss the calorie counts of a Crumbl cookie versus a Big Mac, a 12-pack of Miller Lite, and a family-size bag of Doritos. The men are wearing casual clothing, and the lighting is bright and even. The camera angles are mostly static, with occasional zooms on the food items being discussed. The overall tone of the video is lighthearted and informative. The video transitions to comparing a Crumbl cookie to a Big Mac, displaying images of each item side-by-side. The men discuss the ingredients and calorie counts, with one man guessing that the Crumbl cookie has more calories. The correct answer is revealed, and the video moves on to the next comparison. The video then compares a Crumbl cookie to a 12-pack of Miller Lite, with one man commenting on the absurdity of the comparison. The men discuss the calorie counts, and the correct answer is revealed. The video then compares a Crumbl cookie to a family-size bag of Doritos, with one man expressing surprise at the calorie count of the Doritos. The video concludes with a discussion about the calorie count of a candy cane brownie Crumbl cookie. The men guess the calorie count, and the correct answer is revealed. The video ends with a shot of the Crumbl cookie and the text \"HOW MANY CALORIES?\" The overall tone of the video is lighthearted and informative, with the men engaging in a friendly debate about the calorie counts of different foods."
+  },
+  {
+    id:3,
+    video:"https://youtube.com/shorts/tvUZbBQJN_E",
+    videoLabel:"Viral Food Trends for a Full Day",
+    questions:[
+      {difficulty:1,question:"The creator makes ice cream outside in the snow. Besides crushed Oreos and sprinkles, what candy does she add?",options:["Reese's Pieces","Skittles","M&Ms","Gummy Bears"],correct:2,explanation:"She adds crumbled Oreos, sprinkles, and M&Ms to the snow ice cream mixture. CVI's object detection identified 3 branded candy/cookie products in the outdoor scene alone, despite quick cuts and a moving camera.",cvi_insight:"CVI: 3 branded products detected in outdoor snow scene despite fast camera movement"},
+      {difficulty:2,question:"For the Buldak Hot Cheeto Balls, she uses a specific cooking method instead of deep frying. What does she do?",options:["Air fries them","Bakes them in the oven","Shallow fries them in a pan","Grills them on a griddle"],correct:2,explanation:"She does a shallow fry in a pan instead of deep frying. CVI's action recognition detected the cooking technique and classified it as 'shallow fry' based on oil level and pan angle — mapping exact preparation methods across food content.",cvi_insight:"CVI: Cooking technique auto-classified from oil level + pan angle — shallow fry detected"},
+      {difficulty:3,question:"For the no-bake cheesecake, she uses a specific cookie brand for the crust. Which one?",options:["Oreo","Chips Ahoy Reese's Pieces","Nutter Butter","Biscoff"],correct:1,explanation:"She uses Chips Ahoy Reese's Pieces cookies for the crust, then drizzles melted peanut butter and Nutella, topped with peanut butter M&Ms. CVI's package detection identified the cookie box in a 1.5-second close-up and cross-referenced it with the peanut butter theme.",cvi_insight:"CVI: Package label OCR from 1.5-sec close-up cross-referenced with flavor theme across toppings"}
+    ],
+    audio: "Only eating this month's viral food trends for a full day. First up, ice cream in the snow. In my opinion, this is the best snow day recipe because it doesn't involve actually eating snow, which in New York City is probably filled with so much dust. And y'all, my neighborhood squirrels were so curious what we were doing. They def wanted a bite. I added crumbled Oreos, sprinkles, and M&M's, and it's definitely more of a melty soft serve, but it is so good with all those like chocolatey mix ins. It for sure tastes more like a really creamy thick whipped cream than ice cream, but I love whipped cream, so I am not complaining. Next up, I tried Chef Suie's Buldak Hot Cheeto Balls. @heyimsuie I use the two times spicy Buldak, but I learned my lesson and I only use one spice pack this time and so much cheese. And then you just crush up some hot Cheetos. You make a little egg wash and then you dip your balls and Chef Suie said that you have to do two coats of egg and then I did a little shallow fry instead of a deep fry, but look at how gorgeously red and crispy and even with just one spice packet and so much cheese, they were still so spicy, but so good with the crunch from the fried Cheeto crust. I did dip it in a little chipotle Mayo, but I don't really think it needed it. They're already so rich and spicy on their own. And then finally, you know, I had to do it the viral no bake Japanese cheesecake. @smallersam_pcos I use smaller Sam's slightly healthier recipe with yogurt and cheesecake Jell-O mix, but then I immediately made it so much less healthy with Chips Ahoy Reese's pieces for the crust. And since the vibe is chocolate peanut butter, I also drizzled on some melted peanut butter and melted Nutella over the top. And then I added some peanut butter M&M's for a little extra crunch, okay? Then you just chill it overnight and I'm actually so glad that I used Sam's yogurt recipe instead of the cream cheese because it would have been way too rich, but it was kind of perfect. The cookies get really soft overnight and they really do kind of taste like a cheesecake crust. And I mean, it's Nutella and peanut butter, like of course it's delicious and that's all for today.",
+    video: "The video opens with a close-up of a woman biting into a red, Cheeto-covered ball, with the text \"Only Eating\" displayed. The text expands to \"Only Eating This Month's VIRAL FOOD TRENDS for a Full Day!\" The scene transitions to a woman outside in the snow, holding a large metal bowl with a white mixture, and the same text overlay. The video cuts to a snowy park scene with bare trees and apartment buildings in the background. The woman is shown preparing a recipe in the snow, adding ingredients like heavy whipping cream, powdered sugar, vanilla extract, crumbled Oreos, sprinkles, and M&Ms to a bowl. Squirrels are seen running around in the snow nearby. She tastes the mixture and gives a thumbs up. The scene changes to the woman indoors, holding two bags of Buldak ramen. She cooks the ramen, then mixes it with cheese and a spice packet in a bowl. She crushes Hot Cheetos in a bag with a rolling pin. She prepares an egg wash, dips the ramen balls in the egg wash, then in flour, then in the crushed Cheetos, and shallow fries them in a pan. She plates the fried balls and dips one in cheese sauce before eating it. The scene shifts again to the woman holding a container of Greek yogurt. She adds yogurt and cheesecake Jell-O mix to a container, then layers Chips Ahoy Reese's Pieces cookies on top. She drizzles melted peanut butter and Nutella over the cookies, then adds peanut butter M&Ms. After chilling overnight, she scoops and eats the dessert. The video features a woman with long red hair and fair skin. She is wearing a black shirt in the indoor scenes and a brown, fur-lined jacket in the outdoor scenes. Her nails are manicured with a white and silver design. The video is brightly lit, with a purple hue in the indoor scenes and natural lighting in the outdoor scenes. The camera is mostly static, with occasional close-ups of the food preparation and eating. The video is well-edited, with quick cuts and transitions. The video includes several instances of brand visibility. The Buldak ramen bags are prominently displayed, as are the Chips Ahoy Reese's Pieces cookies, Jell-O cheesecake mix, Chobani Greek yogurt, and M&Ms. The brands are also mentioned verbally in the audio. The products are presented in a positive light, with the woman expressing enjoyment of the food she is preparing and eating."
+  },
+  {
+    id:4,
+    video:"https://www.instagram.com/p/DT3wjThEv1s/",
+    videoLabel:"Korean Skincare: Good vs Bad",
+    questions:[
+      {difficulty:1,question:"The creator reviews products inside a store. What is she wearing?",options:["Black turtleneck and jeans","Beige dress with a cream cardigan","White lab coat","Blue blouse and skirt"],correct:1,explanation:"She wears a beige dress with a short pleated skirt, paired with a cream-colored button-down cardigan, while walking through the Korean skincare aisle. CVI's appearance detection tagged her outfit across all product-holding frames — useful for brand-creator style matching.",cvi_insight:"CVI: Creator outfit tagged across product frames — beige dress + cream cardigan matched to lifestyle aesthetic"},
+      {difficulty:2,question:"She labels each Korean skincare brand as either 'good' or 'bad'. How many brands does she label as BAD?",options:["2 brands","3 brands","4 brands","5 brands"],correct:2,explanation:"She labels exactly 4 brands as bad. CVI's frame-by-frame analysis detected that she holds 'bad' products with a single-hand grip at arm's length, while 'good' products are held closer with both hands — a subconscious signal of endorsement.",cvi_insight:"CVI: Product hold distance + grip style predicts positive vs. negative sentiment"},
+      {difficulty:3,question:"She starts the video by holding up one specific product and calling it 'amazing'. Which product is it?",options:["Medicube Zero Pore Pads","Beauty of Joseon Snail Serum","TirTir Cushion Foundation","I'm From Rice Toner"],correct:1,explanation:"She opens with 'Beauty of Joseon snail serum is amazing' — holding it up as the first product. CVI's temporal product mapping tracked all 7 products in sequence and detected that the first product shown received the strongest positive micro-expression, setting the tone for the entire review.",cvi_insight:"CVI: Temporal product mapping — first product shown received strongest positive micro-expression, anchoring video sentiment"}
+    ],
+    audio: "Beauty of Joseon snail serum is amazing. Corsx is so toxic. This is good and gives amazing results for your skin. This is unfortunately bad. I'm from and Tirtir with two great toners for a glowy skin. This is good and the most trendy thing right now. Mediheal is actually bad. This is good and unfortunately Tirtir sunscreen is not good for you. Korean skincare is probably the hottest trend in beauty. Don't be fooled, not everything is clean and non toxic. And if you want my list of recommendation comment K beauty below.",
+    video: "The video features a woman in a retail environment, specifically a store selling Korean skincare products. She is standing in an aisle, surrounded by shelves stocked with various skincare items. She is wearing a beige dress with a short, pleated skirt, paired with a cream-colored button-down cardigan. She has long, dark hair and is wearing a necklace. Throughout the video, she holds up different skincare products, providing commentary on their effectiveness. The camera remains mostly static, focusing on her as she speaks and presents the products. Text overlays appear on the screen, displaying the brand and product names she is discussing. The lighting is bright and even, typical of a retail setting. The shelves are neatly organized, showcasing a wide range of skincare brands and products. The overall impression is a clean, well-lit, and organized retail space dedicated to Korean skincare. The woman begins by holding up a bottle of Beauty of Joseon snail serum, followed by Corsx products. She then presents Medicube products, followed by Tirtir toners. Next, she showcases Biodance and Mediheal sheet masks. She concludes by displaying Tirtir sunscreen. Throughout the video, she provides brief opinions on each product, categorizing them as either \"good\" or \"bad.\" The camera remains focused on her as she moves between products, with text overlays identifying each brand and product name. In the final segment, the woman emphasizes that not all Korean skincare products are clean and non-toxic. She encourages viewers to comment \"K beauty\" below if they want her list of recommendations. She crosses her arms and looks directly at the camera, maintaining a confident and informative demeanor. The background remains the same, with shelves of skincare products visible behind her. The video ends with a clear call to action, inviting viewers to engage with her content."
+  },
+  {
+    id:5,
+    video:"https://www.instagram.com/p/DTdnON_krzp/",
+    videoLabel:"Top Asian Finds at Costco",
+    questions:[
+      {difficulty:1,question:"The video opens with the creator standing outside. What does he point at to introduce where he's shopping?",options:["An H-Mart entrance sign","The Costco store sign","A Trader Joe's logo","A Ranch 99 banner"],correct:1,explanation:"He points up at the Costco sign on a sunny day before walking inside. CVI's location detection identified the retail environment from the entrance signage in the opening frame — auto-tagging the content's shopping context before any products appear.",cvi_insight:"CVI: Retail location auto-identified from entrance signage in opening frame — Costco tagged pre-product"},
+      {difficulty:2,question:"He shows a Japanese whiskey that comes in a unique decorative bottle. What animal shape does the bottle feature?",options:["A dragon","A koi fish","A crane","A tanuki"],correct:1,explanation:"The Japanese whiskey comes in a decorative koi fish-shaped bottle, priced at $79.99. CVI's object shape recognition classified the non-standard bottle shape and cross-referenced it with the price tag text — mapping premium product packaging as a visual signal.",cvi_insight:"CVI: Non-standard bottle shape classified + price tag OCR ($79.99) — premium packaging signal detected"},
+      {difficulty:3,question:"Among all the Asian food products, he stumbles upon an unexpected non-food item. What is it and how much does it cost?",options:["A rice cooker — $149.99","A Yamaha piano — $24,199.99","A sake set — $89.99","A karaoke machine — $399.99"],correct:1,explanation:"In a quick, easy-to-miss moment, a Yamaha piano priced at $24,199.99 appears among the food displays. CVI's frame-by-frame analysis catches every object — including this 2-second cameo — and auto-flagged it as a non-category anomaly in food content.",cvi_insight:"CVI: Anomaly object auto-flagged — non-food item ($24K Yamaha piano) detected in food-category content"}
+    ],
+    audio: "Top Asian finds at Costco. Starting off strong with Korean street food, walnut cakes with custard filling. Hodugwaja, super excited. Korean fish sausage. You can get these at a convenience store. $11.79. My favorite dumplings of all time, the Ajinomoto Gyoza. $10.99 this week. Great buy. Lots of Japanese items including a $24,000 piano. Japanese whiskey. It comes out of the koi head at $79.99. Korean Soju now comes in peach, lychee, pineapple, and strawberry. These Dekopon oranges are really nice and sweet. Same with the Shine Muscat grapes. This is young buckwheat grass. It has some fibers and lots of nutrients added to it. Similar to matcha in flavor I would say, but it's a health food and there's no caffeine. Imuraya Castella is back $12.99. Japanese style sponge cake. It's a bit on the egg forward side, but serve it with tea. It's really good. Am I at Ranch 99 or am I at Costco? Check it out. Herbal jelly $11.99, nine cups. These Korean kimchi pancakes are incredible. I know that these aren't Asian, but these custard tarts are really good. If you sprinkle a little bit of sugar and some cinnamon on top, it's just as good as the ones I've tried in Portugal. Ube flavored milk drink from Maeil. They make a really good iced coffee from Korea.",
+    video: "The video opens with a man standing in front of a Costco store on a sunny day. He points up at the Costco sign and introduces the video as a showcase of Asian finds at Costco. The video transitions to various product displays inside Costco, featuring items like Korean street food walnut cakes, Korean fish sausage, Ajinomoto Gyoza, and a Yamaha piano priced at $24,199.99. The man holds up and displays each product, providing commentary on its price and quality. He shows Japanese whiskey in a decorative koi-shaped bottle, Korean Soju in various flavors, Dekopon oranges, and Shine Muscat grapes. He also presents young buckwheat grass powder, Japanese Castella sponge cake, herbal jelly, and Korean kimchi pancakes. He also shows Portuguese custard tarts, and Ube flavored milk drink from Maeil. Throughout the video, the man is seen smiling and engaging with the camera, providing close-ups of the products and their packaging. The setting changes as he moves through different sections of the store, highlighting the variety of Asian products available. The man continues to showcase various Asian products available at Costco, holding up each item and providing commentary. He emphasizes the quality and taste of the products, such as the Dekopon oranges and Shine Muscat grapes. He also mentions the health benefits of the young buckwheat grass powder, comparing its flavor to matcha. The video includes close-ups of the product packaging, highlighting brand names and ingredients. The man also shares personal preferences, such as his favorite dumplings being the Ajinomoto Gyoza. He expresses excitement about finding certain items, like the Korean street food walnut cakes. The setting remains within the Costco store, with shelves and freezers filled with various products in the background. The video concludes with the man showcasing Ube flavored milk drink from Maeil. He recommends serving the Castella sponge cake with tea and suggests adding sugar and cinnamon to the Portuguese custard tarts. He expresses surprise at finding herbal jelly at Costco, comparing it to Ranch 99. The video ends with a focus on the Ube flavored milk drink, mentioning that it makes a good iced coffee. The man's tone throughout the video is enthusiastic and informative, aiming to highlight the diverse range of Asian products available at Costco."
+  },
+  {
+    id:6,
+    video:"https://www.instagram.com/p/DVJKqMIDlxg/",
+    videoLabel:"Night Routine — Skincare & Body Care",
+    questions:[
+      {difficulty:1,question:"At the start of her routine, before any products, the creator uses two tools on her skin. What are they?",options:["A gua sha stone and ice roller","A body brush and wooden roller","An electric massager and foam roller","A dry towel and loofah"],correct:1,explanation:"She begins by using a body brush on her arms and torso, followed by a wooden roller. CVI's action recognition detected the two-step pre-product ritual and classified both tools — body brush (natural bristle) and wooden roller — from their shapes and motion patterns.",cvi_insight:"CVI: Pre-product tool detection — body brush + wooden roller classified from shape and motion pattern"},
+      {difficulty:2,question:"In the shower, she uses a specific brand of shampoo, conditioner, and scalp solution. Which brand is it?",options:["Pantene","Olaplex","Dr. Groot","Kerastase"],correct:2,explanation:"She uses Dr. Groot shampoo, conditioner, and a scalp revitalizing solution in the shower. CVI's package-label OCR identified the Dr. Groot branding across 3 different bottles in the shower scene, mapping the full haircare stack from a single creator.",cvi_insight:"CVI: 3 Dr. Groot products detected via package OCR in shower scene — full haircare stack mapped"},
+      {difficulty:3,question:"She applies a serum to her face using a pink electronic device. Which serum brand is it?",options:["TATCHA Dewy Skin Cream","medicube Deep Cleansing Foam","Bionymph Youth Serum","Centella Red Serum"],correct:2,explanation:"She applies Bionymph Youth Serum using a pink electronic device (medicube Booster Pro). CVI's multi-object tracking distinguished the serum bottle from the application device, correctly attributing the product to Bionymph and the tool to medicube — two different brands used together in a single step.",cvi_insight:"CVI: Multi-object tracking separated serum brand (Bionymph) from device brand (medicube) in single application step"}
+    ],
+    audio: "Night routine",
+    video: "The video showcases a woman in a bathroom setting, demonstrating her extensive night-time beauty and personal care routine. Initially, she's wearing a beige tank top and black shorts, using a body brush and wooden roller on her skin. The scene transitions to close-ups of various products, including a green stick, eye patches, and a bottle of Bionymph Youth Serum, which she applies to her face using a pink device. She then uses hair oil and a scalp massager. The video transitions to the shower, where she uses Dr. Groot shampoo, conditioner, and a scalp revitalizing solution. She washes her hair and face, then applies a white face mask. While the mask sets, she brushes her teeth with toothpaste. The video continues with her rinsing her mouth with mouthwash, applying a lip mask, and washing off the face mask. She uses a soapy sponge to wash her body, followed by Dove exfoliating body polish and shaving her underarms and arms with shaving cream and a razor. After the shower, she applies Centella Red Serum and Torriden serum to her face, followed by eye patches and a facial massage tool. She finishes by applying a pink face mask, hair oil, and body lotion, demonstrating each step in detail."
+  }
+];
+
+function pickRandom(arr){return arr[Math.floor(Math.random()*arr.length)];}
+
+let autoTimer=null;
+function autoAdvance(fn){
+  let sec=5;
+  const el=document.getElementById('countdown');
+  autoTimer=setInterval(()=>{
+    sec--;
+    if(el)el.textContent=sec;
+    if(sec<=0){clearInterval(autoTimer);autoTimer=null;fn();}
+  },1000);
+}
+
+let activeVideo=null,currentQ=0,streak=0,gameOver=false;
+
+function startGame(){
+  activeVideo=pickRandom(VIDEOS);
+  currentQ=0;streak=0;gameOver=false;
+  document.getElementById('landing').classList.add('hidden');
+  document.getElementById('videoScreen').classList.remove('hidden');
+  renderVideoScreen();
+}
+
+function fmtTime(s){
+  const m=Math.floor(s/60),sec=Math.floor(s%60);
+  return m+':'+(sec<10?'0':'')+sec;
+}
+
+function renderVideoScreen(){
+  const v=activeVideo,area=document.getElementById('videoArea');
+  area.innerHTML=`<div class="watch-screen">
+    <div class="watch-step">Step 1 of 2</div>
+    <h2>Watch the Video</h2>
+    <p class="watch-sub">Watch carefully — you'll answer 3 questions about what you see.</p>
+    <div class="video-player-wrap" id="vidWrap">
+      <video id="quizVideo" playsinline></video>
+      <div class="vid-pause-icon" id="vidPauseIcon">
+        <div><svg viewBox="0 0 24 24"><polygon points="8,5 20,12 8,19"/></svg></div>
+      </div>
+      <div class="video-controls">
+        <button class="vid-play-btn" id="vidPlayBtn">
+          <svg id="vidPlayIcon" viewBox="0 0 24 24"><rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/></svg>
+        </button>
+        <div class="vid-progress-wrap" id="vidProgressWrap">
+          <div class="vid-progress-bar" id="vidProgressBar"></div>
+        </div>
+        <span class="vid-time" id="vidTime">0:00 / 0:00</span>
+      </div>
+    </div>
+  </div>`;
+
+  const vid=document.getElementById('quizVideo');
+  const wrap=document.getElementById('vidWrap');
+  const playBtn=document.getElementById('vidPlayBtn');
+  const playIcon=document.getElementById('vidPlayIcon');
+  const pauseIcon=document.getElementById('vidPauseIcon');
+  const progBar=document.getElementById('vidProgressBar');
+  const progWrap=document.getElementById('vidProgressWrap');
+  const timeEl=document.getElementById('vidTime');
+  const pauseSvg='<rect x="6" y="5" width="4" height="14"/><rect x="14" y="5" width="4" height="14"/>';
+  const playSvg='<polygon points="8,5 20,12 8,19"/>';
+  let hideTimer=null;
+
+  vid.src=v.id+'.mp4';
+  vid.load();
+  vid.playbackRate=1.2;
+  vid.muted=false;
+  vid.play().catch(()=>{vid.muted=true;vid.play();});
+
+  function scheduleHide(){
+    clearTimeout(hideTimer);
+    wrap.classList.remove('hide-controls');
+    hideTimer=setTimeout(()=>{if(!vid.paused)wrap.classList.add('hide-controls');},2500);
+  }
+  scheduleHide();
+
+  function togglePlay(e){
+    e.stopPropagation();
+    if(vid.paused) vid.play(); else vid.pause();
+  }
+
+  vid.addEventListener('click',togglePlay);
+  playBtn.addEventListener('click',togglePlay);
+
+  vid.addEventListener('play',()=>{
+    playIcon.innerHTML=pauseSvg;
+    pauseIcon.querySelector('svg').innerHTML=pauseSvg;
+    pauseIcon.classList.add('show');
+    setTimeout(()=>pauseIcon.classList.remove('show'),400);
+    wrap.classList.remove('paused');
+    scheduleHide();
+  });
+
+  vid.addEventListener('pause',()=>{
+    playIcon.innerHTML=playSvg;
+    pauseIcon.querySelector('svg').innerHTML=playSvg;
+    pauseIcon.classList.add('show');
+    wrap.classList.add('paused');
+    wrap.classList.remove('hide-controls');
+    clearTimeout(hideTimer);
+  });
+
+  wrap.addEventListener('mousemove',scheduleHide);
+  wrap.addEventListener('touchstart',scheduleHide,{passive:true});
+
+  vid.addEventListener('timeupdate',()=>{
+    if(vid.duration){
+      progBar.style.width=(vid.currentTime/vid.duration*100)+'%';
+      timeEl.textContent=fmtTime(vid.currentTime)+' / '+fmtTime(vid.duration);
+    }
+  });
+
+  progWrap.addEventListener('click',(e)=>{
+    e.stopPropagation();
+    const rect=progWrap.getBoundingClientRect();
+    vid.currentTime=((e.clientX-rect.left)/rect.width)*vid.duration;
+  });
+
+  vid.addEventListener('ended',function onEnd(){
+    vid.removeEventListener('ended',onEnd);
+    const overlay=document.createElement('div');
+    overlay.className='video-ended-overlay';
+    overlay.innerHTML='<div class="veo-text">Starting quiz in</div><div class="veo-count" id="vidCountdown">2</div>';
+    wrap.appendChild(overlay);
+    let sec=2;
+    const iv=setInterval(()=>{
+      sec--;
+      const el=document.getElementById('vidCountdown');
+      if(el)el.textContent=sec;
+      if(sec<=0){clearInterval(iv);startQuestions();}
+    },1000);
+  });
+}
+
+function startQuestions(){
+  const vid=document.getElementById('quizVideo');
+  if(vid){vid.pause();vid.src='';}
+  document.getElementById('videoScreen').classList.add('hidden');
+  document.getElementById('game').classList.remove('hidden');
+  renderProgress();renderQuestion();
+}
+
+function renderProgress(){
+  const bar=document.getElementById('progressBar');bar.innerHTML='';
+  for(let i=0;i<3;i++){
+    const p=document.createElement('div');p.className='progress-pip';
+    if(i<currentQ&&i<streak) p.classList.add('done');
+    else if(i===currentQ&&gameOver) p.classList.add('wrong');
+    else if(i===currentQ&&!gameOver) p.classList.add('active');
+    bar.appendChild(p);
+  }
+  document.getElementById('streakPill').textContent=`🔥 ${streak} / 3`;
+}
+
+function renderQuestion(){
+  const q=activeVideo.questions[currentQ],area=document.getElementById('questionArea'),L=['A','B','C','D'];
+  let dots='';for(let i=0;i<3;i++)dots+=`<span class="${i<q.difficulty?'on':''}"></span>`;
+  area.innerHTML=`<div class="q-card"><div class="q-meta"><div class="q-num">QUESTION ${currentQ+1} / 3</div><div class="diff-pills">${dots}</div></div><h3>${q.question}</h3><div class="options">${q.options.map((o,i)=>`<button class="opt-btn" onclick="answer(${i})"><span class="opt-letter">${L[i]}</span><span>${o}</span></button>`).join('')}</div><div id="feedback"></div></div>`;
+}
+
+function answer(idx){
+  const q=activeVideo.questions[currentQ],ok=idx===q.correct;
+
+  document.querySelectorAll('.opt-btn').forEach((b,i)=>{
+    b.classList.add('answered');b.style.pointerEvents='none';
+    if(i===q.correct)b.classList.add('correct-answer');
+    else if(i===idx&&!ok)b.classList.add('wrong-answer');
+    else b.classList.add('dimmed');
+  });
+
+  if(ok){
+    streak++;
+    renderProgress();
+    const isLast=currentQ>=2;
+    if(isLast){
+      document.getElementById('feedback').innerHTML=`<div class="explanation right"><div class="result-label">✅ Correct!</div><div class="result-sub">Streak: ${streak} of 3 — Perfect!</div><div class="exp-text">${q.explanation}</div><div class="cvi-tag">${q.cvi_insight}</div></div><div class="auto-next">Showing your prize in <span id="countdown">5</span>s...</div>`;
+      autoAdvance(showResults);
+    } else {
+      document.getElementById('feedback').innerHTML=`<div class="explanation right"><div class="result-label">✅ Correct!</div><div class="result-sub">Streak: ${streak} of 3</div><div class="exp-text">${q.explanation}</div><div class="cvi-tag">${q.cvi_insight}</div></div><button class="next-btn" onclick="nextQuestion()">Next Question →</button>`;
+    }
+  } else {
+    gameOver=true;
+    renderProgress();
+    document.getElementById('feedback').innerHTML=`<div class="explanation wrong"><div class="result-label">❌ Game Over!</div><div class="result-sub">You cleared ${streak} of 3 questions</div><div class="exp-text">${q.explanation}</div><div class="cvi-tag">${q.cvi_insight}</div></div><div class="auto-next">Showing your prize in <span id="countdown">5</span>s...</div>`;
+    autoAdvance(showResults);
+  }
+}
+
+function nextQuestion(){
+  currentQ++;
+  if(currentQ>=3) showResults();
+  else { renderProgress();renderQuestion(); }
+}
+
+function showResults(){
+  document.getElementById('game').classList.add('hidden');
+  const r=document.getElementById('results');r.classList.remove('hidden');
+  const p=PRIZES[streak];
+
+  let rankTitle;
+  if(streak===3) rankTitle="Perfect Detective";
+  else if(streak===2) rankTitle="Sharp Observer";
+  else if(streak===1) rankTitle="First Clue Found";
+  else rankTitle="Case Cold";
+
+  const audioText=activeVideo.audio||'';
+  const videoText=activeVideo.video||'';
+  const audioWords=audioText.split(/\s+/).filter(Boolean).length;
+  const videoWords=videoText.split(/\s+/).filter(Boolean).length;
+
+  r.innerHTML=`<div class="results-card">
+    <div class="res-eyebrow">Crack the Case</div>
+    <div class="big-emoji">${p.emoji}</div>
+    <div class="rank">${rankTitle}</div>
+    <div class="rank-desc">You cleared ${streak} of 3 questions${streak<3?' before getting caught':' — flawless run'}!</div>
+
+    <div class="depth-showcase">
+      <div class="depth-header">
+        <div class="depth-eyebrow">⚡ Capture 10X more signals</div>
+        <h4>From one video, our visual intelligence engine extracted:</h4>
+        <p>${audioWords + videoWords} words of structured signal — audio transcript + visual scene description</p>
+      </div>
+      <div class="depth-tabs">
+        <button class="depth-tab active" onclick="switchDepthTab(this,'audio')">
+          <em class="tab-icon">🎙</em>Audio Transcript
+        </button>
+        <button class="depth-tab" onclick="switchDepthTab(this,'video')">
+          <em class="tab-icon">👁</em>Visual Description
+        </button>
+      </div>
+      <div class="depth-content">
+        <div class="depth-pane active" data-pane="audio">
+          <div class="signal-count">🎙 ${audioWords} words captured</div>
+          <p>${audioText}</p>
+        </div>
+        <div class="depth-pane" data-pane="video">
+          <div class="signal-count">👁 ${videoWords} words captured</div>
+          <p>${videoText}</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="prize-won-box">
+      <div class="pw-label">🎁 Your Prize</div>
+      <div class="pw-prize">${streak===0?'Better luck next time!':p.name}</div>
+      <div class="pw-desc">${p.desc}</div>
+    </div>
+
+    <div class="cta-box">
+      <h4>Convosight Visual Intelligence</h4>
+      <p>Our visual insights engine decodes billions of signals from videos to uncover the hidden, unspoken insights that text and audio alone can't capture.</p>
+    </div>
+    <button class="restart-btn" onclick="restart()">Play Again →</button>
+  </div>`;
+}
+
+function switchDepthTab(btn,pane){
+  btn.closest('.depth-showcase').querySelectorAll('.depth-tab').forEach(t=>t.classList.remove('active'));
+  btn.classList.add('active');
+  btn.closest('.depth-showcase').querySelectorAll('.depth-pane').forEach(p=>{
+    p.classList.toggle('active',p.dataset.pane===pane);
+  });
+}
+
+function restart(){
+  if(autoTimer){clearInterval(autoTimer);autoTimer=null;}
+  document.getElementById('results').classList.add('hidden');
+  document.getElementById('game').classList.add('hidden');
+  document.getElementById('videoScreen').classList.add('hidden');
+  document.getElementById('landing').classList.remove('hidden');
+  currentQ=0;streak=0;gameOver=false;
+}
+</script>
+</body>
+</html>
